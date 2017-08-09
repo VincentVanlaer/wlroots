@@ -74,6 +74,14 @@ bool wlr_texture_upload_pixels(struct wlr_texture *surf,
  */
 bool wlr_texture_upload_shm(struct wlr_texture *surf, uint32_t format,
 		struct wl_shm_buffer *shm);
+
+/**
+ * Attache an EGLImage to this texture. The image may be discarded after
+ * calling this function.
+ */
+bool wlr_texture_attach_egl_image(struct wlr_texture *surf, uint32_t format,
+		int width, int height, void* egl_image);
+
 /**
  * Prepares a matrix with the appropriate scale for the given texture and
  * multiplies it with the projection, producing a matrix that the shader can

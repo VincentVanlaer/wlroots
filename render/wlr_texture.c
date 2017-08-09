@@ -30,6 +30,9 @@ bool wlr_texture_upload_shm(struct wlr_texture *texture, uint32_t format,
 	return texture->impl->upload_shm(texture->state, format, shm);
 }
 
+bool wlr_texture_attach_egl_image(struct wlr_texture *texture, uint32_t format,
+		int width, int height, void* egl_image);
+
 void wlr_texture_get_matrix(struct wlr_texture *texture,
 		float (*matrix)[16], const float (*projection)[16], int x, int y) {
 	texture->impl->get_matrix(texture->state, matrix, projection, x, y);

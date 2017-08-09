@@ -37,7 +37,8 @@ struct wlr_texture_impl {
 		const unsigned char *pixels);
 	bool (*upload_shm)(struct wlr_texture_state *state, uint32_t format,
 		struct wl_shm_buffer *shm);
-	// TODO: egl
+	bool (*attach_egl)(struct wlr_texture_state *state, uint32_t format,
+		int width, int height, void* egl_image);
 	void (*get_matrix)(struct wlr_texture_state *state,
 		float (*matrix)[16], const float (*projection)[16], int x, int y);
 	void (*bind)(struct wlr_texture_state *state);

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <GLES2/gl2.h>
+#include <EGL/egl.h>
 #include <wayland-util.h>
 #include <wayland-server-protocol.h>
 #include <wlr/render.h>
@@ -11,6 +12,7 @@
 #include "render/gles2.h"
 
 struct shaders shaders;
+struct extensions exts;
 
 static bool compile_shader(GLuint type, const GLchar *src, GLuint *shader) {
 	*shader = GL_CALL(glCreateShader(type));
@@ -71,8 +73,24 @@ error:
 	wlr_log(L_ERROR, "Failed to set up default shaders!");
 }
 
+static void init_extensions() {
+	if (exts.initialized) {
+		return;
+	}
+
+	exts.glEGLImageTargetTexture2DOES = (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)
+		eglGetProcAddress("glEGLImageTargetTexture2DOES");
+
+	if (!exts.glEGLImageTargetTexture2DOES) {
+		wlr_log(L_ERROR, "Faield to GLES extension 'glEGLImageTargetTexture2DOES'");
+	}
+
+	exts.initialized = true;
+}
+
 static void init_globals() {
 	init_default_shaders();
+	init_extensions();
 }
 
 static void wlr_gles2_begin(struct wlr_renderer_state *state,

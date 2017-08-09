@@ -4,11 +4,13 @@
 #include <string.h>
 #include <stdbool.h>
 #include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <wlr/render.h>
 #include <wlr/util/log.h>
 
 struct pixel_format {
 	uint32_t wl_format;
+	uint32_t egl_format;
 	GLint gl_format, gl_type;
 	int depth, bpp;
 	GLuint *shader;
@@ -27,9 +29,16 @@ struct shaders {
 	GLuint ellipse;
 };
 
+struct extensions {
+	bool initialized;
+	PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
+};
+
 extern struct shaders shaders;
+extern struct extensions exts;
 
 const struct pixel_format *gl_format_for_wl_format(enum wl_shm_format fmt);
+const struct pixel_format *gl_format_for_egl_format(uint32_t egl_format);
 
 struct wlr_texture *gles2_texture_init();
 

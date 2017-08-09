@@ -62,6 +62,30 @@ static bool gles2_texture_upload_shm(struct wlr_texture_state *texture,
 	return true;
 }
 
+static bool gles2_texture_attach_egl_image(struct wlr_texture_state *texture,
+		uint32_t format, int width, int height, GLeglImageOES image) {
+	
+	const struct pixel_format *fmt = gl_format_for_egl_format(format);
+	if (!fmt || !fmt->gl_format) {
+		wlr_log(L_ERROR, "No supported pixel format for this texture");
+		return false;
+	}
+
+	texture->wlr_texture->width = width;
+	texture->wlr_texture->height = height;
+	texture->wlr_texture->format = format;
+	texture->pixel_format = fmt;
+
+	GL_CALL(glGenTextures(1, &texture->tex_id));
+	GL_CALL(glBindTexture(GL_TEXTURE_2D, texture->tex_id));
+	GL_CALL(exts.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image));
+
+	texture->wlr_texture->valid = true;
+
+	return true;
+
+}
+
 static void gles2_texture_get_matrix(struct wlr_texture_state *texture,
 		float (*matrix)[16], const float (*projection)[16], int x, int y) {
 	struct wlr_texture *_texture = texture->wlr_texture;
@@ -90,6 +114,7 @@ static void gles2_texture_destroy(struct wlr_texture_state *texture) {
 static struct wlr_texture_impl wlr_texture_impl = {
 	.upload_pixels = gles2_texture_upload_pixels,
 	.upload_shm = gles2_texture_upload_shm,
+	.attach_egl = gles2_texture_attach_egl_image,
 	.get_matrix = gles2_texture_get_matrix,
 	.bind = gles2_texture_bind,
 	.destroy = gles2_texture_destroy,
