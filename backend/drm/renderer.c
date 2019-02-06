@@ -193,6 +193,25 @@ bool export_drm_bo(struct gbm_bo *bo, struct wlr_dmabuf_attributes *attribs) {
 	return true;
 }
 
+struct gbm_bo *import_drm_bo(struct wlr_drm_renderer *rend,
+		struct wlr_dmabuf_attributes *attribs) {
+	struct gbm_import_fd_modifier_data data = {
+		.width = attribs->width,
+		.height = attribs->height,
+		.format = attribs->format,
+		.modifier = attribs->modifier,
+		.num_fds = attribs->n_planes
+	};
+
+	for (int i = 0; i < attribs->n_planes; i++) {
+		data.fds[i] = attribs->fd[i];
+		data.strides[i] = attribs->stride[i];
+		data.offsets[i] = attribs->offset[i];
+	}
+
+	return gbm_bo_import(rend->gbm, GBM_BO_IMPORT_FD_MODIFIER, &data, 0);
+}
+
 static void free_tex(struct gbm_bo *bo, void *data) {
 	struct wlr_texture *tex = data;
 	wlr_texture_destroy(tex);

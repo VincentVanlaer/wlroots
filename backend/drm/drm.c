@@ -632,11 +632,9 @@ static bool drm_connector_set_cursor(struct wlr_output *output,
 		ret = drmGetCap(drm->fd, DRM_CAP_CURSOR_HEIGHT, &h);
 		h = ret ? 64 : h;
 
-		struct wlr_drm_renderer *renderer =
-			drm->parent ? &drm->parent->renderer : &drm->renderer;
 
-		if (!init_drm_surface(&plane->surf, renderer, w, h,
-				renderer->gbm_format, GBM_BO_USE_LINEAR | GBM_BO_USE_SCANOUT)) {
+		if (!init_drm_surface(&plane->surf, &drm->renderer, w, h,
+				drm->renderer.gbm_format, GBM_BO_USE_LINEAR)) {
 			wlr_log(WLR_ERROR, "Cannot allocate cursor resources");
 			return false;
 		}
@@ -688,6 +686,20 @@ static bool drm_connector_set_cursor(struct wlr_output *output,
 
 		struct wlr_renderer *rend = plane->surf.renderer->wlr_rend;
 
+		if (drm->parent) {
+			struct wlr_dmabuf_attributes attribs;
+
+			if (!wlr_texture_to_dmabuf(texture, &attribs)) {
+				wlr_log(WLR_ERROR, "Could not export cursor texture");
+			}
+
+			texture = wlr_texture_from_dmabuf(rend, &attribs);
+
+			if (!texture) {
+				wlr_log(WLR_ERROR, "Could not import cursor texture");
+			}
+		}
+
 		struct wlr_box cursor_box = { .width = width, .height = height };
 
 		float matrix[9];
@@ -708,7 +720,9 @@ static bool drm_connector_set_cursor(struct wlr_output *output,
 	}
 
 	struct gbm_bo *bo = plane->cursor_enabled ? plane->surf.back : NULL;
+
 	bool ok = drm->iface->crtc_set_cursor(drm, crtc, bo);
+
 	if (ok) {
 		wlr_output_update_needs_swap(output);
 	}
